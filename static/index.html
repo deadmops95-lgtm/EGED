@@ -149,9 +149,8 @@
         tg.expand();
         const userId = tg.initDataUnsafe?.user?.id || 999999;
         
-        // ⚠️ ВНИМАНИЕ: Сюда нужно вставить адрес вашего бэкенда с Bothost (без слэша на конце)
-        // Пример: const API_URL = "https://your-project.bothost.ru";
-        const API_URL = "ЗДЕСЬ_УКАЖИТЕ_АДРЕС_ВАШЕГО_СЕРВЕРА_С_BOTHOST";
+        // Адрес вашего бэкенда на Bothost прописан автоматически
+        const API_URL = "https://bot-1790210796-8710-prokudin95.bothost.tech";
 
         const userLang = tg.initDataUnsafe?.user?.language_code || 'ru';
         const isRu = userLang.startsWith('ru');
