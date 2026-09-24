@@ -21,6 +21,7 @@ dp = Dispatcher()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     database.init_db()
+    # Запускаем поллинг бота в фоновой задаче
     asyncio.create_task(dp.start_polling(bot))
     yield
 
@@ -86,3 +87,8 @@ async def cmd_start(message: types.Message):
         "Здесь вы можете упорядочить свои дни и остаться наедине с мыслями. Нажмите кнопку ниже:",
         reply_markup=kb
     )
+
+# Гарантированный запуск через uvicorn, если файл вызывается напрямую
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=3000, reload=False)
