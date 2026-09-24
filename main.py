@@ -4,7 +4,7 @@ import os
 import shutil
 from fastapi import FastAPI, Request, UploadFile, File, Form
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
@@ -14,24 +14,33 @@ import pytesseract
 
 import database
 
-TOKEN = "8613062226:AAGzEqGz0j42I9ZrAyaxivMMqeW_4bir4N4"  # Замените на ваш токен
-WEBAPP_URL = "https://ваш-домен-на-bothost.ru"  # Замените на ваш URL от Bothost
+# Ваш токен от BotFather
+TOKEN = "8613062226:AAGzEqGz0j42I9ZrAyaxivMMqeW_4bir4N4"  
+
+# ⚠️ ВНИМАНИЕ: Сюда в кавычках нужно будет вставить адрес, который вам выдаст Bothost
+# Например: "https://myproject.bothost.ru" (без слэша на конце)
+WEBAPP_URL = "ЗДЕСЬ_УКАЖИТЕ_АДРЕС_ВАШЕГО_САЙТА_С_BOTHOST"  
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 app = FastAPI()
 
+# Разрешаем запросы с вашего сайта на GitHub Pages
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 database.init_db()
 
-# Создаем папки для статики и загрузки картинок
+# Папки для загрузки картинок
 os.makedirs("static", exist_ok=True)
 os.makedirs("static/uploads", exist_ok=True)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
-
-@app.get("/")
-def read_index():
-    return FileResponse("static/index.html")
 
 # Модели данных
 class ChronicleCreate(BaseModel):
@@ -82,14 +91,12 @@ async def create_sanctuary(
         
         image_url = f"/static/uploads/{file_name}"
 
-        # Распознаем текст с картинки с помощью OCR (русский + английский языки)
         try:
             img = Image.open(file_path)
             recognized_text = pytesseract.image_to_string(img, lang='rus+eng').strip()
         except Exception as e:
             logging.error(f"OCR Error: {e}")
 
-    # Итоговый текст: то что написал пользователь + то что распозналось с картинки
     full_text = text
     if recognized_text:
         full_text += f"\n\n[Распознанный текст с изображения]:\n{recognized_text}"
