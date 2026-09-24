@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> Sanctuary & Chronicles </title>
+    <title>Sanctuary & Chronicles</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -11,7 +11,7 @@
             --surface-color: #1a1a1e;
             --text-color: #e1e1e6;
             --hint-color: #82828c;
-            --accent-color: #d4af37; /* Благородный янтарно-золотой акцент */
+            --accent-color: #d4af37;
             --border-color: #2a2a30;
         }
         body {
@@ -114,7 +114,7 @@
 </head>
 <body>
 
-    <!-- Вкладка 1: Хроники (Планы, расписание, задачи) -->
+    <!-- Вкладка 1: Хроники -->
     <div id="chronicles-tab" class="tab active">
         <h2 id="l-chronicles-title">🏛️ Хроники дня</h2>
         <input type="text" id="chron-text" placeholder="...">
@@ -124,7 +124,7 @@
         <div id="chronicles-list" style="margin-top: 20px;"></div>
     </div>
 
-    <!-- Вкладка 2: Убежище (Мысли и картинки с распознаванием) -->
+    <!-- Вкладка 2: Убежище -->
     <div id="sanctuary-tab" class="tab">
         <h2 id="l-sanctuary-title">🕯️ Убежище мыслей</h2>
         <textarea id="sanc-text" rows="3" placeholder="..."></textarea>
@@ -149,11 +149,13 @@
         tg.expand();
         const userId = tg.initDataUnsafe?.user?.id || 999999;
         
-        // Определяем язык пользователя (если не ру, ставим английский)
+        // ⚠️ ВНИМАНИЕ: Сюда нужно вставить адрес вашего бэкенда с Bothost (без слэша на конце)
+        // Пример: const API_URL = "https://your-project.bothost.ru";
+        const API_URL = "ЗДЕСЬ_УКАЖИТЕ_АДРЕС_ВАШЕГО_СЕРВЕРА_С_BOTHOST";
+
         const userLang = tg.initDataUnsafe?.user?.language_code || 'ru';
         const isRu = userLang.startsWith('ru');
 
-        // Словарь локализации
         const i18n = {
             ru: {
                 chronTitle: "🏛️ Хроники дня",
@@ -183,7 +185,6 @@
 
         const t = isRu ? i18n.ru : i18n.en;
 
-        // Применяем тексты интерфейса
         document.getElementById('l-chronicles-title').innerText = t.chronTitle;
         document.getElementById('chron-text').placeholder = t.chronPlaceholder;
         document.getElementById('chron-time').placeholder = t.chronTimePlaceholder;
@@ -197,7 +198,6 @@
         document.getElementById('nav-chron').innerText = t.navChron;
         document.getElementById('nav-sanc').innerText = t.navSanc;
 
-        // Переключение вкладок
         function switchTab(tabName) {
             document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav button').forEach(el => el.classList.remove('active-nav'));
@@ -209,9 +209,8 @@
             if(tabName === 'sanctuary') loadSanctuary();
         }
 
-        // Загрузка Хроник
         async function loadChronicles() {
-            let res = await fetch(`/api/chronicles/${userId}`);
+            let res = await fetch(`${API_URL}/api/chronicles/${userId}`);
             let items = await res.json();
             let html = '';
             items.forEach(i => {
@@ -230,7 +229,7 @@
             let date = document.getElementById('chron-date').value;
             if(!text) return;
 
-            await fetch('/api/chronicles', {
+            await fetch(`${API_URL}/api/chronicles`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({user_id: userId, text, time_slot, date})
@@ -242,7 +241,7 @@
         }
 
         async function toggleChronicle(id) {
-            await fetch('/api/chronicles/toggle', {
+            await fetch(`${API_URL}/api/chronicles/toggle`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({task_id: id, user_id: userId})
@@ -250,13 +249,12 @@
             loadChronicles();
         }
 
-        // Загрузка Убежища
         async function loadSanctuary() {
-            let res = await fetch(`/api/sanctuary/${userId}`);
+            let res = await fetch(`${API_URL}/api/sanctuary/${userId}`);
             let items = await res.json();
             let html = '';
             items.forEach(i => {
-                let imgHtml = i.image_path ? `<img src="${i.image_path}">` : '';
+                let imgHtml = i.image_path ? `<img src="${API_URL}${i.image_path}">` : '';
                 html += `<div class="card">
                     <div style="white-space: pre-wrap;">${i.text}</div>
                     ${imgHtml}
@@ -277,7 +275,7 @@
                 formData.append('file', fileInput.files[0]);
             }
 
-            await fetch('/api/sanctuary', {
+            await fetch(`${API_URL}/api/sanctuary`, {
                 method: 'POST',
                 body: formData
             });
