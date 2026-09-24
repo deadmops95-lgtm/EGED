@@ -1,7 +1,8 @@
 import asyncio
 import logging
 import os
-from fastapi import FastAPI, Request, Form
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -16,7 +17,16 @@ WEBAPP_URL = "ЗДЕСЬ_УКАЖИТЕ_АДРЕС_ВАШЕГО_САЙТА_С_BO
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
-app = FastAPI()
+
+# Современный запуск бота вместе с FastAPI (без предупреждений)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    database.init_db()
+    # Запуск поллинга бота в фоне
+    asyncio.create_task(dp.start_polling(bot))
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -25,8 +35,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-database.init_db()
 
 os.makedirs("static", exist_ok=True)
 os.makedirs("static/uploads", exist_ok=True)
@@ -80,11 +88,3 @@ async def cmd_start(message: types.Message):
         "Здесь вы можете упорядочить свои дни и остаться наедине с мыслями. Нажмите кнопку ниже:",
         reply_markup=kb
     )
-
-async def run_bot():
-    logging.basicConfig(level=logging.INFO)
-    await dp.start_polling(bot)
-
-@app.on_event("startup")
-async def startup_event():
-    asyncio.create_task(run_bot())
