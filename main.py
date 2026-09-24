@@ -17,15 +17,13 @@ import database
 # Ваш токен от BotFather
 TOKEN = "8613062226:AAGzEqGz0j42I9ZrAyaxivMMqeW_4bir4N4"  
 
-# ⚠️ ВНИМАНИЕ: Сюда в кавычках нужно будет вставить адрес, который вам выдаст Bothost
-# Например: "https://myproject.bothost.ru" (без слэша на конце)
+# Укажите адрес вашего сайта с Bothost (без слэша на конце)
 WEBAPP_URL = "ЗДЕСЬ_УКАЖИТЕ_АДРЕС_ВАШЕГО_САЙТА_С_BOTHOST"  
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 app = FastAPI()
 
-# Разрешаем запросы с вашего сайта на GitHub Pages
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -36,13 +34,11 @@ app.add_middleware(
 
 database.init_db()
 
-# Папки для загрузки картинок
 os.makedirs("static", exist_ok=True)
 os.makedirs("static/uploads", exist_ok=True)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Модели данных
 class ChronicleCreate(BaseModel):
     user_id: int
     text: str
@@ -53,7 +49,6 @@ class ChronicleToggle(BaseModel):
     task_id: int
     user_id: int
 
-# API Эндпоинты
 @app.get("/api/chronicles/{user_id}")
 def get_chronicles(user_id: int):
     return database.get_user_chronicles(user_id)
@@ -104,7 +99,6 @@ async def create_sanctuary(
     database.add_user_sanctuary(user_id, full_text, image_url)
     return {"status": "ok", "recognized": recognized_text}
 
-# Бот Telegram
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
     kb = InlineKeyboardMarkup(inline_keyboard=[
@@ -116,10 +110,10 @@ async def cmd_start(message: types.Message):
         reply_markup=kb
     )
 
-async def main():
+async def run_bot():
     logging.basicConfig(level=logging.INFO)
-    asyncio.create_task(dp.start_polling(bot))
+    await dp.start_polling(bot)
 
 @app.on_event("startup")
 async def startup_event():
-    async asyncio.create_task(main())
+    asyncio.create_task(run_bot())
