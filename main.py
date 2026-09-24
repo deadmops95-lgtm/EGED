@@ -14,7 +14,7 @@ import pytesseract
 
 import database
 
-TOKEN = "ВАШ_ТОКЕН_БОТА_ОТ_BOTFATHER"  # Замените на ваш токен
+TOKEN = "8613062226:AAGzEqGz0j42I9ZrAyaxivMMqeW_4bir4N4"  # Замените на ваш токен
 WEBAPP_URL = "https://ваш-домен-на-bothost.ru"  # Замените на ваш URL от Bothost
 
 bot = Bot(token=TOKEN)
