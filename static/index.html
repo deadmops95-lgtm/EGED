@@ -149,7 +149,7 @@
         tg.expand();
         const userId = tg.initDataUnsafe?.user?.id || 999999;
         
-        // Адрес вашего бэкенда на Bothost прописан автоматически
+        // Адрес бэкенда на Bothost
         const API_URL = "https://bot-1790210796-8710-prokudin95.bothost.tech";
 
         const userLang = tg.initDataUnsafe?.user?.language_code || 'ru';
@@ -209,17 +209,21 @@
         }
 
         async function loadChronicles() {
-            let res = await fetch(`${API_URL}/api/chronicles/${userId}`);
-            let items = await res.json();
-            let html = '';
-            items.forEach(i => {
-                let timeStr = i.time_slot ? `[${i.time_slot}] ` : '';
-                let dateStr = i.date ? ` (${i.date})` : '';
-                html += `<div class="card" onclick="toggleChronicle(${i.id})">
-                    <span class="${i.status === 'archived' ? 'archived' : ''}"><b>${timeStr}</b>${i.text}${dateStr}</span>
-                </div>`;
-            });
-            document.getElementById('chronicles-list').innerHTML = html;
+            try {
+                let res = await fetch(`${API_URL}/api/chronicles/${userId}`);
+                let items = await res.json();
+                let html = '';
+                items.forEach(i => {
+                    let timeStr = i.time_slot ? `[${i.time_slot}] ` : '';
+                    let dateStr = i.date ? ` (${i.date})` : '';
+                    html += `<div class="card" onclick="toggleChronicle(${i.id})">
+                        <span class="${i.status === 'archived' ? 'archived' : ''}"><b>${timeStr}</b>${i.text}${dateStr}</span>
+                    </div>`;
+                });
+                document.getElementById('chronicles-list').innerHTML = html;
+            } catch (e) {
+                console.error("Ошибка загрузки хроник:", e);
+            }
         }
 
         async function addChronicle() {
@@ -249,38 +253,35 @@
         }
 
         async function loadSanctuary() {
-            let res = await fetch(`${API_URL}/api/sanctuary/${userId}`);
-            let items = await res.json();
-            let html = '';
-            items.forEach(i => {
-                let imgHtml = i.image_path ? `<img src="${API_URL}${i.image_path}">` : '';
-                html += `<div class="card">
-                    <div style="white-space: pre-wrap;">${i.text}</div>
-                    ${imgHtml}
-                    <div style="font-size: 11px; color: var(--hint-color); margin-top: 6px;">${i.created_at}</div>
-                </div>`;
-            });
-            document.getElementById('sanctuary-list').innerHTML = html;
+            try {
+                let res = await fetch(`${API_URL}/api/sanctuary/${userId}`);
+                let items = await res.json();
+                let html = '';
+                items.forEach(i => {
+                    let imgHtml = i.image_path ? `<img src="${API_URL}${i.image_path}">` : '';
+                    html += `<div class="card">
+                        <div style="white-space: pre-wrap;">${i.text}</div>
+                        ${imgHtml}
+                        <div style="font-size: 11px; color: var(--hint-color); margin-top: 6px;">${i.created_at}</div>
+                    </div>`;
+                });
+                document.getElementById('sanctuary-list').innerHTML = html;
+            } catch (e) {
+                console.error("Ошибка загрузки убежища:", e);
+            }
         }
 
         async function addSanctuary() {
             let text = document.getElementById('sanc-text').value;
-            let fileInput = document.getElementById('sanc-file');
-            
-            let formData = new FormData();
-            formData.append('user_id', userId);
-            formData.append('text', text);
-            if(fileInput.files[0]) {
-                formData.append('file', fileInput.files[0]);
-            }
+            if(!text) return;
 
             await fetch(`${API_URL}/api/sanctuary`, {
                 method: 'POST',
-                body: formData
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({user_id: userId, text: text})
             });
 
             document.getElementById('sanc-text').value = '';
-            fileInput.value = '';
             loadSanctuary();
         }
 
