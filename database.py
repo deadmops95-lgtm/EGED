@@ -1,14 +1,19 @@
 import sqlite3
+import os
 
-DB_NAME = "organizer.db"
+# Используем защищенную папку на Bothost для сохранения данных при перезагрузках
+DATA_DIR = os.getenv('DATA_DIR', '/app/data')
+os.makedirs(DATA_DIR, exist_ok=True)
+DB_PATH = os.path.join(DATA_DIR, "organizer.db")
 
 def init_db():
-    conn = sqlite3.connect(DB_NAME)
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+    
     # Таблица Хроник (Задачи и Расписание)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS chronicles (
-            id INTEGER INTEGER PRIMARY KEY AUTOINCREMENT,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER,
             text TEXT,
             time_slot TEXT,
@@ -16,6 +21,7 @@ def init_db():
             date TEXT
         )
     """)
+    
     # Таблица Убежища (Мысли, заметки и текст с картинок)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS sanctuary (
@@ -31,7 +37,7 @@ def init_db():
 
 # Функции для Хроник
 def get_user_chronicles(user_id: int):
-    conn = sqlite3.connect(DB_NAME)
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("SELECT id, text, time_slot, status, date FROM chronicles WHERE user_id = ? ORDER BY id DESC", (user_id,))
     rows = cursor.fetchall()
@@ -39,14 +45,14 @@ def get_user_chronicles(user_id: int):
     return [{"id": r[0], "text": r[1], "time_slot": r[2], "status": r[3], "date": r[4]} for r in rows]
 
 def add_user_chronicle(user_id: int, text: str, time_slot: str, date: str):
-    conn = sqlite3.connect(DB_NAME)
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("INSERT INTO chronicles (user_id, text, time_slot, date) VALUES (?, ?, ?, ?)", (user_id, text, time_slot, date))
     conn.commit()
     conn.close()
 
 def toggle_chronicle_status(chronicle_id: int, user_id: int):
-    conn = sqlite3.connect(DB_NAME)
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("SELECT status FROM chronicles WHERE id = ? AND user_id = ?", (chronicle_id, user_id))
     row = cursor.fetchone()
@@ -58,7 +64,7 @@ def toggle_chronicle_status(chronicle_id: int, user_id: int):
 
 # Функции для Убежища
 def get_user_sanctuary(user_id: int):
-    conn = sqlite3.connect(DB_NAME)
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("SELECT id, text, image_path, created_at FROM sanctuary WHERE user_id = ? ORDER BY id DESC", (user_id,))
     rows = cursor.fetchall()
@@ -66,7 +72,7 @@ def get_user_sanctuary(user_id: int):
     return [{"id": r[0], "text": r[1], "image_path": r[2], "created_at": r[3]} for r in rows]
 
 def add_user_sanctuary(user_id: int, text: str, image_path: str = None):
-    conn = sqlite3.connect(DB_NAME)
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("INSERT INTO sanctuary (user_id, text, image_path) VALUES (?, ?, ?)", (user_id, text, image_path))
     conn.commit()
