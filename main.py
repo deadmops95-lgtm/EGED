@@ -18,11 +18,9 @@ WEBAPP_URL = "ЗДЕСЬ_УКАЖИТЕ_АДРЕС_ВАШЕГО_САЙТА_С_BO
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-# Современный запуск бота вместе с FastAPI (без предупреждений)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     database.init_db()
-    # Запуск поллинга бота в фоне
     asyncio.create_task(dp.start_polling(bot))
     yield
 
