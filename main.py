@@ -13,7 +13,7 @@ from aiogram.types import WebAppInfo, InlineKeyboardMarkup, InlineKeyboardButton
 import database
 
 TOKEN = "8613062226:AAGzEqGz0j42I9ZrAyaxivMMqeW_4bir4N4"  
-WEBAPP_URL = "ЗДЕСЬ_УКАЖИТЕ_АДРЕС_ВАШЕГО_САЙТА_С_BOTHOST"  
+WEBAPP_URL = "https://bot-1790210796-8710-prokudin95.bothost.tech"  
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
