@@ -1,23 +1,17 @@
 import asyncio
 import logging
 import os
-import shutil
-from fastapi import FastAPI, Request, UploadFile, File, Form
+from fastapi import FastAPI, Request, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram.types import WebAppInfo, InlineKeyboardMarkup, InlineKeyboardButton
-from PIL import Image
-import pytesseract
 
 import database
 
-# Ваш токен от BotFather
 TOKEN = "8613062226:AAGzEqGz0j42I9ZrAyaxivMMqeW_4bir4N4"  
-
-# Укажите адрес вашего сайта с Bothost (без слэша на конце)
 WEBAPP_URL = "ЗДЕСЬ_УКАЖИТЕ_АДРЕС_ВАШЕГО_САЙТА_С_BOTHOST"  
 
 bot = Bot(token=TOKEN)
@@ -49,6 +43,10 @@ class ChronicleToggle(BaseModel):
     task_id: int
     user_id: int
 
+class SanctuaryCreate(BaseModel):
+    user_id: int
+    text: str
+
 @app.get("/api/chronicles/{user_id}")
 def get_chronicles(user_id: int):
     return database.get_user_chronicles(user_id)
@@ -68,36 +66,9 @@ def get_sanctuary(user_id: int):
     return database.get_user_sanctuary(user_id)
 
 @app.post("/api/sanctuary")
-async def create_sanctuary(
-    user_id: int = Form(...),
-    text: str = Form(""),
-    file: UploadFile = File(None)
-):
-    image_url = None
-    recognized_text = ""
-
-    if file:
-        file_extension = file.filename.split(".")[-1]
-        file_name = f"{user_id}_{os.urandom(4).hex()}.{file_extension}"
-        file_path = os.path.join("static/uploads", file_name)
-        
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-        
-        image_url = f"/static/uploads/{file_name}"
-
-        try:
-            img = Image.open(file_path)
-            recognized_text = pytesseract.image_to_string(img, lang='rus+eng').strip()
-        except Exception as e:
-            logging.error(f"OCR Error: {e}")
-
-    full_text = text
-    if recognized_text:
-        full_text += f"\n\n[Распознанный текст с изображения]:\n{recognized_text}"
-
-    database.add_user_sanctuary(user_id, full_text, image_url)
-    return {"status": "ok", "recognized": recognized_text}
+def create_sanctuary(item: SanctuaryCreate):
+    database.add_user_sanctuary(item.user_id, item.text, None)
+    return {"status": "ok"}
 
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
