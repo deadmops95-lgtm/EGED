@@ -38,13 +38,18 @@
         input, textarea {
             width: 100%;
             padding: 10px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             background: var(--card-bg);
             border: 1px solid var(--hint-color);
             border-radius: 8px;
             color: var(--text-color);
             box-sizing: border-box;
             font-size: 14px;
+        }
+
+        .row {
+            display: flex;
+            gap: 8px;
         }
 
         button {
@@ -57,6 +62,7 @@
             cursor: pointer;
             width: 100%;
             font-weight: 600;
+            margin-top: 4px;
         }
 
         button:active {
@@ -68,14 +74,23 @@
             padding: 12px;
             border-radius: 8px;
             margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
 
         .card.archived {
             text-decoration: line-through;
             opacity: 0.5;
+        }
+
+        .card img {
+            max-width: 100%;
+            border-radius: 6px;
+            margin-top: 8px;
+        }
+
+        .meta {
+            font-size: 12px;
+            color: var(--hint-color);
+            margin-top: 4px;
         }
     </style>
 </head>
@@ -85,28 +100,30 @@
     <div class="section">
         <h2>📜 Хроники</h2>
         <input type="text" id="chronicleInput" placeholder="Что нужно сделать...">
+        <div class="row">
+            <input type="text" id="chronicleTime" placeholder="Время (например, 14:00)">
+            <input type="date" id="chronicleDate">
+        </div>
         <button onclick="addChronicle()">Записать в хроники</button>
         <div id="chroniclesList" style="margin-top: 12px;"></div>
     </div>
 
-    <!-- Секция: Убежище (Заметки) -->
+    <!-- Секция: Убежище (Заметки и цитаты с картинок) -->
     <div class="section">
         <h2>🛡️ Убежище</h2>
-        <textarea id="sanctuaryInput" rows="3" placeholder="Ваши мысли или заметки..."></textarea>
+        <textarea id="sanctuaryInput" rows="3" placeholder="Ваши мысли, цитаты..."></textarea>
+        <input type="file" id="sanctuaryImage" accept="image/*">
         <button onclick="addSanctuary()">Сохранить в тишине</button>
         <div id="sanctuaryList" style="margin-top: 12px;"></div>
     </div>
 
     <script>
-        // Жестко зафиксированный и проверенный рабочий адрес бэкенда на Bothost
         const API_URL = "https://bot-1790210796-8710-prokudin95.bothost.tech";
         
-        // Получаем реальный ID пользователя из Telegram, если доступен, иначе тестовый
         const tg = window.Telegram.WebApp;
         tg.expand();
         const userId = (tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.id : 123456789;
 
-        // Загрузка данных при старте
         window.onload = function() {
             loadChronicles();
             loadSanctuary();
@@ -122,7 +139,13 @@
                 items.forEach(item => {
                     let div = document.createElement("div");
                     div.className = `card ${item.status === 'archived' ? 'archived' : ''}`;
-                    div.innerHTML = `<span>${item.text}</span>`;
+                    
+                    let metaText = "";
+                    if (item.time_slot || item.date) {
+                        metaText = `<div class="meta">⏰ ${item.time_slot || ''} ${item.date || ''}</div>`;
+                    }
+
+                    div.innerHTML = `<span>${item.text}</span>${metaText}`;
                     div.onclick = () => toggleChronicle(item.id);
                     list.appendChild(div);
                 });
@@ -133,19 +156,29 @@
 
         async function addChronicle() {
             let input = document.getElementById("chronicleInput");
+            let timeInput = document.getElementById("chronicleTime");
+            let dateInput = document.getElementById("chronicleDate");
+            
             if (!input.value.trim()) return;
 
             try {
                 await fetch(`${API_URL}/api/chronicles`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ user_id: userId, text: input.value, time_slot: null, date: null })
+                    body: JSON.stringify({ 
+                        user_id: userId, 
+                        text: input.value, 
+                        time_slot: timeInput.value || null, 
+                        date: dateInput.value || null 
+                    })
                 });
                 input.value = "";
+                timeInput.value = "";
+                dateInput.value = "";
                 loadChronicles();
             } catch (e) {
                 console.error("Ошибка сохранения хроники:", e);
-                alert("Не удалось сохранить задачу на сервере.");
+                alert("Не удалось сохранить задачу.");
             }
         }
 
@@ -172,7 +205,10 @@
                 items.forEach(item => {
                     let div = document.createElement("div");
                     div.className = "card";
-                    div.innerHTML = `<span>${item.text}</span>`;
+                    
+                    let imgHtml = item.image_path ? `<img src="${API_URL}${item.image_path}" alt="attachment">` : "";
+                    div.innerHTML = `<span>${item.text}</span>${imgHtml}`;
+                    
                     list.appendChild(div);
                 });
             } catch (e) {
@@ -182,19 +218,28 @@
 
         async function addSanctuary() {
             let input = document.getElementById("sanctuaryInput");
-            if (!input.value.trim()) return;
+            let imageInput = document.getElementById("sanctuaryImage");
+            
+            if (!input.value.trim() && imageInput.files.length === 0) return;
+
+            let formData = new FormData();
+            formData.append("user_id", userId);
+            formData.append("text", input.value);
+            if (imageInput.files[0]) {
+                formData.append("file", imageInput.files[0]);
+            }
 
             try {
                 await fetch(`${API_URL}/api/sanctuary`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ user_id: userId, text: input.value })
+                    body: formData
                 });
                 input.value = "";
+                imageInput.value = "";
                 loadSanctuary();
             } catch (e) {
                 console.error("Ошибка сохранения заметки:", e);
-                alert("Не удалось сохранить заметку на сервере.");
+                alert("Не удалось сохранить заметку.");
             }
         }
     </script>
