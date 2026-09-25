@@ -3,289 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sanctuary & Chronicles</title>
+    <title>Хроники & Убежище</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg-color: #121214;
-            --surface-color: #1a1a1e;
-            --text-color: #e1e1e6;
-            --hint-color: #82828c;
-            --accent-color: #d4af37;
-            --border-color: #2a2a30;
+            --bg-color: var(--tg-theme-bg-color, #121212);
+            --text-color: var(--tg-theme-text-color, #e0e0e0);
+            --hint-color: var(--tg-theme-hint-color, #888888);
+            --button-color: var(--tg-theme-button-color, #4a90e2);
+            --button-text-color: var(--tg-theme-button-text-color, #ffffff);
+            --card-bg: rgba(255, 255, 255, 0.05);
         }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
-            padding: 15px;
-            padding-bottom: 70px;
+            padding: 16px;
+            box-sizing: border-box;
         }
+
         h2 {
-            font-weight: 400;
-            letter-spacing: 1px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 8px;
-            color: var(--accent-color);
-            margin-top: 0;
+            font-size: 20px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--hint-color);
+            padding-bottom: 6px;
         }
-        .tab { display: none; }
-        .tab.active { display: block; }
+
+        .section {
+            margin-bottom: 24px;
+        }
+
         input, textarea {
             width: 100%;
-            padding: 12px;
-            margin: 6px 0 14px 0;
-            background-color: var(--surface-color);
-            border: 1px solid var(--border-color);
-            color: var(--text-color);
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 15px;
-        }
-        input:focus, textarea:focus {
-            border-color: var(--accent-color);
-            outline: none;
-        }
-        button {
-            background-color: var(--accent-color);
-            color: #121214;
-            border: none;
-            padding: 12px;
-            border-radius: 6px;
-            width: 100%;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        button:active { opacity: 0.8; }
-        .nav {
-            display: flex;
-            justify-content: space-around;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: var(--surface-color);
             padding: 10px;
-            border-top: 1px solid var(--border-color);
-        }
-        .nav button {
-            background: none;
-            color: var(--hint-color);
-            font-size: 13px;
-            width: auto;
-            font-weight: normal;
-        }
-        .nav button.active-nav {
-            color: var(--accent-color);
-        }
-        .card {
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
-            padding: 12px 15px;
-            border-radius: 6px;
             margin-bottom: 10px;
-        }
-        .archived {
-            text-decoration: line-through;
-            opacity: 0.4;
-        }
-        .card img {
-            max-width: 100%;
-            border-radius: 4px;
-            margin-top: 8px;
-        }
-        .file-label {
-            display: block;
-            background: #222228;
-            border: 1px dashed var(--border-color);
-            padding: 10px;
-            text-align: center;
-            border-radius: 6px;
-            margin-bottom: 14px;
-            cursor: pointer;
-            color: var(--hint-color);
+            background: var(--card-bg);
+            border: 1px solid var(--hint-color);
+            border-radius: 8px;
+            color: var(--text-color);
+            box-sizing: border-box;
             font-size: 14px;
         }
-        .file-label input { display: none; }
+
+        button {
+            background-color: var(--button-color);
+            color: var(--button-text-color);
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 600;
+        }
+
+        button:active {
+            opacity: 0.8;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card.archived {
+            text-decoration: line-through;
+            opacity: 0.5;
+        }
     </style>
 </head>
 <body>
 
-    <!-- Вкладка 1: Хроники -->
-    <div id="chronicles-tab" class="tab active">
-        <h2 id="l-chronicles-title">🏛️ Хроники дня</h2>
-        <input type="text" id="chron-text" placeholder="...">
-        <input type="text" id="chron-time" placeholder="09:00 - 10:00">
-        <input type="date" id="chron-date">
-        <button onclick="addChronicle()" id="l-chron-btn">Записать в хроники</button>
-        <div id="chronicles-list" style="margin-top: 20px;"></div>
+    <!-- Секция: Хроники (Задачи) -->
+    <div class="section">
+        <h2>📜 Хроники</h2>
+        <input type="text" id="chronicleInput" placeholder="Что нужно сделать...">
+        <button onclick="addChronicle()">Записать в хроники</button>
+        <div id="chroniclesList" style="margin-top: 12px;"></div>
     </div>
 
-    <!-- Вкладка 2: Убежище -->
-    <div id="sanctuary-tab" class="tab">
-        <h2 id="l-sanctuary-title">🕯️ Убежище мыслей</h2>
-        <textarea id="sanc-text" rows="3" placeholder="..."></textarea>
-        
-        <label class="file-label">
-            <span id="l-file-label">📎 Прикрепить свиток/изображение</span>
-            <input type="file" id="sanc-file" accept="image/*">
-        </label>
-        
-        <button onclick="addSanctuary()" id="l-sanc-btn">Сохранить в тишине</button>
-        <div id="sanctuary-list" style="margin-top: 20px;"></div>
-    </div>
-
-    <!-- Навигация -->
-    <div class="nav">
-        <button onclick="switchTab('chronicles')" id="nav-chron" class="active-nav">🏛️ Хроники</button>
-        <button onclick="switchTab('sanctuary')" id="nav-sanc">🕯️ Убежище</button>
+    <!-- Секция: Убежище (Заметки) -->
+    <div class="section">
+        <h2>🛡️ Убежище</h2>
+        <textarea id="sanctuaryInput" rows="3" placeholder="Ваши мысли или заметки..."></textarea>
+        <button onclick="addSanctuary()">Сохранить в тишине</button>
+        <div id="sanctuaryList" style="margin-top: 12px;"></div>
     </div>
 
     <script>
+        // Жестко зафиксированный и проверенный рабочий адрес бэкенда на Bothost
+        const API_URL = "https://bot-1790210796-8710-prokudin95.bothost.tech";
+        
+        // Получаем реальный ID пользователя из Telegram, если доступен, иначе тестовый
         const tg = window.Telegram.WebApp;
         tg.expand();
-        const userId = tg.initDataUnsafe?.user?.id || 999999;
-        
-        // Адрес бэкенда на Bothost
-        const API_URL = "https://bot-1790210796-8710-prokudin95.bothost.tech";
+        const userId = (tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.id : 123456789;
 
-        const userLang = tg.initDataUnsafe?.user?.language_code || 'ru';
-        const isRu = userLang.startsWith('ru');
-
-        const i18n = {
-            ru: {
-                chronTitle: "🏛️ Хроники дня",
-                chronPlaceholder: "Суть задачи или расписания...",
-                chronTimePlaceholder: "Время (например, 10:00 - 11:30)",
-                chronBtn: "Записать в хроники",
-                sancTitle: "🕯️ Убежище мыслей",
-                sancPlaceholder: "О чем вы думаете в этот момент...",
-                fileLabel: "📎 Прикрепить изображение или записку",
-                sancBtn: "Сохранить в тишине",
-                navChron: "🏛️ Хроники",
-                navSanc: "🕯️ Убежище"
-            },
-            en: {
-                chronTitle: "🏛️ Chronicles",
-                chronPlaceholder: "Task or schedule details...",
-                chronTimePlaceholder: "Time slot (e.g. 10:00 - 11:30)",
-                chronBtn: "Write to Chronicles",
-                sancTitle: "🕯️ Sanctuary",
-                sancPlaceholder: "Your thoughts in solitude...",
-                fileLabel: "📎 Attach image or note photo",
-                sancBtn: "Save in Silence",
-                navChron: "🏛️ Chronicles",
-                navSanc: "🕯️ Sanctuary"
-            }
+        // Загрузка данных при старте
+        window.onload = function() {
+            loadChronicles();
+            loadSanctuary();
         };
 
-        const t = isRu ? i18n.ru : i18n.en;
-
-        document.getElementById('l-chronicles-title').innerText = t.chronTitle;
-        document.getElementById('chron-text').placeholder = t.chronPlaceholder;
-        document.getElementById('chron-time').placeholder = t.chronTimePlaceholder;
-        document.getElementById('l-chron-btn').innerText = t.chronBtn;
-        
-        document.getElementById('l-sanctuary-title').innerText = t.sancTitle;
-        document.getElementById('sanc-text').placeholder = t.sancPlaceholder;
-        document.getElementById('l-file-label').innerText = t.fileLabel;
-        document.getElementById('l-sanc-btn').innerText = t.sancBtn;
-        
-        document.getElementById('nav-chron').innerText = t.navChron;
-        document.getElementById('nav-sanc').innerText = t.navSanc;
-
-        function switchTab(tabName) {
-            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav button').forEach(el => el.classList.remove('active-nav'));
-            
-            document.getElementById(tabName + '-tab').classList.add('active');
-            document.getElementById('nav-' + (tabName === 'chronicles' ? 'chron' : 'sanc')).classList.add('active-nav');
-
-            if(tabName === 'chronicles') loadChronicles();
-            if(tabName === 'sanctuary') loadSanctuary();
-        }
-
+        // --- ХРОНИКИ ---
         async function loadChronicles() {
             try {
                 let res = await fetch(`${API_URL}/api/chronicles/${userId}`);
                 let items = await res.json();
-                let html = '';
-                items.forEach(i => {
-                    let timeStr = i.time_slot ? `[${i.time_slot}] ` : '';
-                    let dateStr = i.date ? ` (${i.date})` : '';
-                    html += `<div class="card" onclick="toggleChronicle(${i.id})">
-                        <span class="${i.status === 'archived' ? 'archived' : ''}"><b>${timeStr}</b>${i.text}${dateStr}</span>
-                    </div>`;
+                let list = document.getElementById("chroniclesList");
+                list.innerHTML = "";
+                items.forEach(item => {
+                    let div = document.createElement("div");
+                    div.className = `card ${item.status === 'archived' ? 'archived' : ''}`;
+                    div.innerHTML = `<span>${item.text}</span>`;
+                    div.onclick = () => toggleChronicle(item.id);
+                    list.appendChild(div);
                 });
-                document.getElementById('chronicles-list').innerHTML = html;
             } catch (e) {
                 console.error("Ошибка загрузки хроник:", e);
             }
         }
 
         async function addChronicle() {
-            let text = document.getElementById('chron-text').value;
-            let time_slot = document.getElementById('chron-time').value;
-            let date = document.getElementById('chron-date').value;
-            if(!text) return;
+            let input = document.getElementById("chronicleInput");
+            if (!input.value.trim()) return;
 
-            await fetch(`${API_URL}/api/chronicles`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({user_id: userId, text, time_slot, date})
-            });
-
-            document.getElementById('chron-text').value = '';
-            document.getElementById('chron-time').value = '';
-            loadChronicles();
+            try {
+                await fetch(`${API_URL}/api/chronicles`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ user_id: userId, text: input.value, time_slot: null, date: null })
+                });
+                input.value = "";
+                loadChronicles();
+            } catch (e) {
+                console.error("Ошибка сохранения хроники:", e);
+                alert("Не удалось сохранить задачу на сервере.");
+            }
         }
 
-        async function toggleChronicle(id) {
-            await fetch(`${API_URL}/api/chronicles/toggle`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({task_id: id, user_id: userId})
-            });
-            loadChronicles();
+        async function toggleChronicle(taskId) {
+            try {
+                await fetch(`${API_URL}/api/chronicles/toggle`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ task_id: taskId, user_id: userId })
+                });
+                loadChronicles();
+            } catch (e) {
+                console.error("Ошибка изменения статуса:", e);
+            }
         }
 
+        // --- УБЕЖИЩЕ ---
         async function loadSanctuary() {
             try {
                 let res = await fetch(`${API_URL}/api/sanctuary/${userId}`);
                 let items = await res.json();
-                let html = '';
-                items.forEach(i => {
-                    let imgHtml = i.image_path ? `<img src="${API_URL}${i.image_path}">` : '';
-                    html += `<div class="card">
-                        <div style="white-space: pre-wrap;">${i.text}</div>
-                        ${imgHtml}
-                        <div style="font-size: 11px; color: var(--hint-color); margin-top: 6px;">${i.created_at}</div>
-                    </div>`;
+                let list = document.getElementById("sanctuaryList");
+                list.innerHTML = "";
+                items.forEach(item => {
+                    let div = document.createElement("div");
+                    div.className = "card";
+                    div.innerHTML = `<span>${item.text}</span>`;
+                    list.appendChild(div);
                 });
-                document.getElementById('sanctuary-list').innerHTML = html;
             } catch (e) {
                 console.error("Ошибка загрузки убежища:", e);
             }
         }
 
         async function addSanctuary() {
-            let text = document.getElementById('sanc-text').value;
-            if(!text) return;
+            let input = document.getElementById("sanctuaryInput");
+            if (!input.value.trim()) return;
 
-            await fetch(`${API_URL}/api/sanctuary`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({user_id: userId, text: text})
-            });
-
-            document.getElementById('sanc-text').value = '';
-            loadSanctuary();
+            try {
+                await fetch(`${API_URL}/api/sanctuary`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ user_id: userId, text: input.value })
+                });
+                input.value = "";
+                loadSanctuary();
+            } catch (e) {
+                console.error("Ошибка сохранения заметки:", e);
+                alert("Не удалось сохранить заметку на сервере.");
+            }
         }
-
-        loadChronicles();
     </script>
 </body>
 </html>
